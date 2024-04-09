@@ -1,0 +1,100 @@
+@page "/assignment/new"
+@inject NavigationManager navigationManager;
+@inject IAssignmentService assignmentService;
+@inject ICategoryService categoryService;
+@inject IUserService userService;
+
+<h1>Agregar Nueva Asignación</h1>
+
+@if (ShowErrorModal)
+{
+  <div id="errorAlert" class="alert alert-danger" role="alert">
+  Ocurrió un error al agregar una nueva tarea. ¡Inténtalo de nuevo!
+</div>
+}
+
+<div class="form-group">
+  <label for="title">Título:</label>
+  <input type="text" class="form-control" id="title" @bind="newAssignment.title" />
+</div>
+<div class="form-group">
+  <label for="description">Descripción:</label>
+  <input type="text" class="form-control" id="description" @bind="newAssignment.description" />
+</div>
+<div class="form-group">
+  <label for="priority">Prioridad:</label>
+  <select class="form-control" @bind="newAssignment.assignmentPriority">
+    <option value="0">Bajo</option>
+    <option value="1">Medio</option>
+    <option value="2">Alto</option>
+  </select>
+</div>
+<div class="form-group">
+  <label for="category">Categoría:</label>
+  <select class="form-control" @bind="newAssignment.categoryId">
+    <option value="">Selecciona una opción</option>
+    @foreach (var category in categories)
+    {
+      <option value="@category.categoryId">@category.name</option>
+    }
+  </select>
+</div>
+<div class="form-group">
+  <label for="user">Usuario:</label>
+  <select class="form-control" @bind="newAssignment.userId">
+    <option value="">Selecciona una opción</option>
+    @foreach (var user in users)
+    {
+      <option value="@user.userId">@user.name</option>
+    }
+  </select>
+</div>
+
+<br />
+<button class="btn btn-primary" @onclick="AddNewAssignment">Guardar</button>
+
+@code {
+  private Assignment newAssignment = new Assignment();
+  private List<Category> categories = new List<Category>();
+  private List<User> users = new List<User>();
+  private bool ShowErrorModal { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      categories = await categoryService.Get();
+      users = await userService.Get();
+    }
+    catch (Exception ex)
+    {
+      // Manejar la excepción, como mostrar un mensaje de error o registrarla
+      Console.WriteLine("Error al cargar categorías y usuarios: " + ex.Message);
+    }
+  }
+
+  private async Task AddNewAssignment()
+  {
+    try
+    {
+      await assignmentService.Add(newAssignment);
+      navigationManager.NavigateTo("/assignment");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error al agregar crear la tarea: {ex.Message}");
+      ShowErrorModal = true;
+      StateHasChanged();
+
+      await Task.Delay(3000);
+      ShowErrorModal = false;
+      StateHasChanged();
+    }
+  }
+
+  private void CloseErrorModal()
+  {
+    ShowErrorModal = false;
+  }
+
+}

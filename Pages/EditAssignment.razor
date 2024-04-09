@@ -1,0 +1,72 @@
+@page "/assignment/{AssignmentId}/edit"
+@inject IAssignmentService assignmentService;
+@inject NavigationManager navigationManager
+
+<h1>Editar Tarea</h1>
+
+
+@if (ShowErrorModal)
+{
+  <div id="errorAlert" class="alert alert-danger" role="alert">
+  Ocurrió un error al actualizar la tarea. ¡Inténtalo de nuevo!
+</div>
+}
+
+@if (assignment == null)
+{
+  <p><em>Loading...</em></p>
+}
+else
+{
+  <div class="form-group">
+  <label for="title">Título:</label>
+  <input type="text" class="form-control" id="title" @bind="assignment.title" />
+</div>
+  <div class="form-group">
+    <label for="description">Descripción:</label>
+    <input type="text" class="form-control" id="description" @bind="assignment.description" />
+  </div>
+  <div class="form-group">
+    <label for="priority">Prioridad:</label>
+    <select class="form-control" @bind="assignment.assignmentPriority">
+      <option value="0">Bajo</option>
+      <option value="1">Medio</option>
+      <option value="2">Alto</option>
+    </select>
+  </div>
+  <br />
+  <button class="btn btn-primary" @onclick="UpdateAssignment">Guardar Cambios</button>
+}
+
+@code {
+  [Parameter]
+  public string AssignmentId { get; set; }
+
+  private Assignment assignment;
+  private bool ShowErrorModal { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    assignment = await assignmentService.GetById(AssignmentId);
+  }
+
+  private async Task UpdateAssignment()
+  {
+    // Intenta actualizar la tarea
+    try
+    {
+      await assignmentService.Update(assignment);
+      navigationManager.NavigateTo("/assignment");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error al editar la tarea: {ex.Message}");
+      ShowErrorModal = true;
+      StateHasChanged();
+
+      await Task.Delay(3000);
+      ShowErrorModal = false;
+      StateHasChanged();
+    }
+  }
+}

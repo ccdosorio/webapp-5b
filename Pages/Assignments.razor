@@ -1,0 +1,73 @@
+@page "/assignment"
+@inject IAssignmentService assignmentService;
+@inject NavigationManager navigationManager;
+
+<PageTitle>Listado de Tareas</PageTitle>
+
+<h1>Listado de Tareas</h1>
+
+<button class="btn btn-primary mb-3" @onclick="AddNewAssignment">Agregar Nuevo</button>
+
+@if (assignments == null)
+{
+  <p><em>Loading...</em></p>
+}
+else
+{
+  <table class="table">
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Título</th>
+      <th>Descripción</th>
+      <th>Prioridad</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var assignment in assignments)
+      {
+        <tr>
+          <td>@assignment.createdAt.ToShortDateString()</td>
+          <td>@assignment.title</td>
+          <td>@assignment.description</td>
+          <td>@assignment.assignmentPriority</td>
+          <td>
+            <button class="btn btn-danger" @onclick="() => DeleteAssignment(assignment)">Eliminar</button>
+            <button class="btn btn-warning" @onclick="() => EditAssignment(assignment)">Modificar</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@code {
+  private List<Assignment> assignments;
+
+  protected override async Task OnInitializedAsync()
+  {
+    assignments = await GetAssignments();
+  }
+
+  private async Task<List<Assignment>> GetAssignments()
+  {
+    return await assignmentService.Get();
+  }
+
+  private void AddNewAssignment()
+  {
+    navigationManager.NavigateTo("/assignment/new");
+  }
+
+  private async Task DeleteAssignment(Assignment assignment)
+  {
+    await assignmentService.Delete(assignment.assignmentId);
+    assignments.Remove(assignment);
+  }
+
+  private void EditAssignment(Assignment assignment)
+  {
+    navigationManager.NavigateTo($"/assignment/{assignment.assignmentId}/edit");
+  }
+}
